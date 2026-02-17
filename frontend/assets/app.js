@@ -1375,7 +1375,7 @@ function loadReports() {
             .report-value { font-weight: 600; color: var(--accent-green); }
             .export-btn { padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s; border: none; }
             .export-csv { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
-            .date-input { background: var(--bg-darker); border: 1px solid var(--glass-border); padding: 10px 15px; border-radius: 8px; color: var(--text-primary); }
+            .date-input { background: #FFFFFF; border: 1px solid #E2E8F0; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); color: #020817; color-scheme: light; }
         </style>
         
         <div class="report-card">
