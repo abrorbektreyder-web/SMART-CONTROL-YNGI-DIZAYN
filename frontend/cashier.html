@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Smart Control - Kassir</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ===== RESPONSIVE CSS ===== -->
+    /* ORGANIC THEME OVERRIDES REMOVED - Using global style.css */
+
+    /* Action Cards Specific to Cashier */
+    .action-card:hover {
+    transform: translateY(-4px);
+    border-color: #4a7c44 !important;
+    box-shadow: 0 20px 25px -5px rgba(74, 124, 68, 0.15) !important;
+    }
+
+    .action-card .action-icon {
+    color: #4a7c44 !important;
+    }
+
+    .action-card h3 {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    }
+
+    .action-card p {
+    color: var(--text-secondary) !important;
+    }
+
+    /* Shift Banner */
+    .shift-banner {
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .shift-open {
+    background: #dcfce7 !important;
+    border: 1px solid #86efac !important;
+    color: #166534 !important;
+    }
+
+    .shift-closed {
+    background: #fee2e2 !important;
+    border: 1px solid #fca5a5 !important;
+    color: #991b1b !important;
+    }
+
+    /* --- DYNAMIC SALES UI OVERRIDES (Crucial for App.js generated content) --- */
+
+    /* POS Inputs */
+    .pos-input,
+    .pos-select {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    border-radius: 0.5rem !important;
+    padding: 12px !important;
+    }
+
+    .pos-input:focus,
+    .pos-select:focus {
+    border-color: #4a7c44 !important;
+    outline: 2px solid rgba(74, 124, 68, 0.2) !important;
+    }
+
+    /* Search Button */
+    .btn-primary {
+    background: #4a7c44 !important;
+    border-radius: 0.5rem !important;
+    }
+
+    .btn-primary:hover {
+    background: #3f623a !important;
+    }
+
+    /* Cart Areas */
+    #cart-items {
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 1rem;
+    }
+
+    .cart-item {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    margin: 8px !important;
+    border-radius: 0.5rem !important;
+    }
+
+    .cart-item-name {
+    color: #0f172a !important;
+    }
+
+    .cart-item-price {
+    color: #64748b !important;
+    }
+
+    /* Quantity Buttons */
+    .qty-btn {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    }
+
+    .qty-btn:hover {
+    background: #cbd5e1 !important;
+    }
+
+    /* Checkout Button - LARGE & GREEN */
+    .btn-checkout {
+    background: #4a7c44 !important;
+    /* Requested Dark Green */
+    color: #ffffff !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    padding: 1.2rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    }
+
+    .btn-checkout:hover:not(:disabled) {
+    background: #3d6638 !important;
+    /* Darker Green Hover */
+    transform: translateY(-2px);
+    }
+
+    .btn-checkout:disabled {
+    background: #94a3b8 !important;
+    opacity: 0.7 !important;
+    }
+
+    /* Clear Button - RED */
+    .btn-clear {
+    background: #dc2626 !important;
+    /* Red 600 */
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    margin-top: 10px;
+    padding: 12px !important;
+    }
+
+    .btn-clear:hover {
+    background: #b91c1c !important;
+    /* Red 700 */
+    }
+
+    /* Payment Method Select */
+    #payment-method {
+    font-weight: 600;
+    color: #0f172a;
+    }
+    </style>
+    .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 26px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    }
+
+    .menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+    display: block;
+    }
+
+    /* Smena status banner */
+    .shift-banner {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    }
+
+    .shift-open {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    }
+
+    .shift-closed {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    }
+
+    /* Quick action cards */
+    .action-card {
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+    }
+
+    .action-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+    }
+
+    .action-card .action-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    }
+
+    .action-card h3 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    }
+
+    .action-card p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+    .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100%;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    width: 260px;
+    background: var(--sidebar-bg);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.active {
+    left: 0;
+    }
+
+    .main-content {
+    margin-left: 0 !important;
+    padding: 15px !important;
+    width: 100% !important;
+    }
+
+    .menu-toggle {
+    display: block;
+    }
+
+    .stats-grid {
+    grid-template-columns: 1fr !important;
+    }
+
+    .content-grid {
+    grid-template-columns: 1fr !important;
+    }
+
+    h1#page-title {
+    font-size: 1.1rem;
+    }
+
+    .top-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    }
+    }
+    </style>
+
+    <script>
+        // STRICT AUTH CHECK — faqat cashier kirishi mumkin
+        (function () {
+            const token = localStorage.getItem("access_token");
+            const role = localStorage.getItem("role");
+            if (!token) { window.location.replace("login.html"); return; }
+            if (role !== "cashier") { localStorage.clear(); window.location.replace("login.html"); }
+        })();
+    </script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h2 class="text-2xl font-bold text-white tracking-tight">Smart Control</h2>
+            <span class="text-white/70 text-sm">Kassir Paneli</span>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="active" onclick="loadDashboard(); closeSidebar();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-layout-dashboard icon mr-3">
+                    <rect width="7" height="9" x="3" y="3" rx="1" />
+                    <rect width="7" height="5" x="14" y="3" rx="1" />
+                    <rect width="7" height="9" x="14" y="12" rx="1" />
+                    <rect width="7" height="5" x="3" y="16" rx="1" />
+                </svg>
+                Bosh Sahifa
+            </a>
+            <a href="#" onclick="loadShiftManagement(); closeSidebar();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-clock icon mr-3">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Smena
+            </a>
+            <a href="#" onclick="loadProducts(); closeSidebar();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-package icon mr-3">
+                    <path d="m7.5 4.27 9 5.15" />
+                    <path
+                        d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                    <path d="m3.3 7 8.7 5 8.7-5" />
+                    <path d="M12 22v-9" />
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="#" onclick="loadSales(); closeSidebar();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-shopping-cart icon mr-3">
+                    <circle cx="8" cy="21" r="1" />
+                    <circle cx="19" cy="21" r="1" />
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                </svg>
+                Yangi Savdo
+            </a>
+            <a href="#" onclick="loadDebts(); closeSidebar();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-hand-coins icon mr-3">
+                    <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+                    <path
+                        d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+                    <path d="m2 16 6 6" />
+                    <circle cx="16" cy="9" r="2.9" />
+                    <circle cx="6" cy="5" r="3" />
+                </svg>
+                Qarzlar
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">KS</div>
+            <div class="info">
+                <h4 id="user-name">Kassir</h4>
+                <p id="user-role">Cashier</p>
+            </div>
+        </div>
+
+        <button onclick="logout()"
+            class="mt-4 w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white font-medium hover:bg-red-500/80 hover:border-transparent transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-log-out">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            Chiqish
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="top-bar" style="display: flex; align-items: center; gap: 10px;">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 id="page-title">Bosh Sahifa</h1>
+            <div class="status-indicator" style="margin-left: auto;">
+                <span class="dot online"></span> Kassa Faol
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view-container">
+
+            <!-- SMENA STATUS BANNER -->
+            <div id="shift-status-banner" class="shift-banner shift-closed">
+                <div>
+                    <strong id="shift-status-text">⏳ Smena holati tekshirilmoqda...</strong>
+                    <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.8;" id="shift-status-detail"></p>
+                </div>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card stat-card glass hero">
+                    <div class="stat-icon sales">💰</div>
+                    <div class="stat-info">
+                        <h3>Bugungi Savdo</h3>
+                        <h2 id="total-sales">0.00 UZS</h2>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">📦</div>
+                    <div class="stat-info">
+                        <h3>Mahsulotlar</h3>
+                        <h2 id="product-count">0</h2>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Kam Qolgan</h3>
+                        <h2 id="low-stock">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <h3 style="margin: 24px 0 14px; color: var(--text-secondary); font-size: 0.9rem;">⚡ Tezkor Amallar</h3>
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card glass action-card" onclick="loadSales()">
+                    <div class="action-icon">🛒</div>
+                    <h3>Yangi Savdo</h3>
+                    <p>Kassaga o'tish</p>
+                </div>
+
+                <div class="card glass action-card" onclick="loadShiftManagement()">
+                    <div class="action-icon">⏰</div>
+                    <h3>Smena</h3>
+                    <p>Ochish / Yopish</p>
+                </div>
+
+                <div class="card glass action-card" onclick="loadDebts()">
+                    <div class="action-icon">📒</div>
+                    <h3>Qarzlar</h3>
+                    <p>To'lov qabul qilish</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./assets/app.js"></script>
+
+    <!-- KASSIR SPECIFIC FUNCTIONS -->
+    <script>
+        // ========================================
+        // MOBIL MENYU TOGGLE
+        // ========================================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        // ========================================
+        // SMENA STATUS CHECK (Dashboard yuklanganda)
+        // ========================================
+        async function checkDashboardShiftBanner() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`${API_URL}/shifts/status/${userId}`, {
+                    headers: getAuthHeaders()
+                });
+
+                const banner = document.getElementById('shift-status-banner');
+                const text = document.getElementById('shift-status-text');
+                const detail = document.getElementById('shift-status-detail');
+
+                // Agar elementlar mavjud bo'lmasa, chiqib ketamiz
+                if (!banner || !text || !detail) return;
+
+                if (response.ok) {
+                    const shift = await response.json();
+                    banner.className = 'shift-banner shift-open';
+                    text.innerHTML = '🟢 <strong>Smena OCHIQ</strong>';
+                    detail.textContent = `Smena #${shift.id} | Boshlang'ich kassa: ${Number(shift.start_cash).toLocaleString()} UZS`;
+                } else {
+                    banner.className = 'shift-banner shift-closed';
+                    text.innerHTML = '🔴 <strong>Smena YOPIQ</strong>';
+                    detail.textContent = 'Savdo qilish uchun avval smena oching';
+                }
+            } catch (error) {
+                console.error('Dashboard shift banner error:', error);
+            }
+        }
+
+        // Sahifa yuklanganda smena holatini tekshir
+        document.addEventListener('DOMContentLoaded', () => {
+            checkDashboardShiftBanner();
+
+            // User info'ni yangilash
+            const name = localStorage.getItem('username') || 'Kassir';
+            const avatarEl = document.getElementById('user-avatar');
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.textContent = name;
+            if (avatarEl) avatarEl.textContent = name.substring(0, 2).toUpperCase();
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

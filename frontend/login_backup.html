@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="description" content="Smart Control POS - Savdo va Boshqaruv Tizimi">
+    <title>Smart Control - Kirish</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Login Specific Styles extending style.css */
+        body {
+            /* Override style.css body to center content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--accent-blue), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent-blue), #8b5cf6);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <h1>Smart Control</h1>
+                <span>Enterprise POS v4.0</span>
+            </div>
+
+            <div id="error-box" class="error-message"></div>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Foydalanuvchi nomi</label>
+                    <input type="text" id="username" name="username" placeholder="admin" required
+                        autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Parol</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-login" id="btn-submit">
+                    Kirish
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://smart-control-v5-stable.onrender.com";
+
+        // Auth check removed - only redirect after successful login
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const errorBox = document.getElementById("error-box");
+            const submitBtn = document.getElementById("btn-submit");
+
+            // Reset error
+            errorBox.classList.remove("show");
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Kirish...';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    // Try to get error message from JSON if possible, otherwise use statusText
+                    let errorMessage = "Login xatosi";
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorData.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = `Xatolik: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                console.log("Server Response:", data);
+
+                // Robust extraction: support both new (access_token, role) and old (token, user.role) formats
+                const token = data.access_token || data.token;
+                const user = data.user || {};
+                const role = data.role || user.role;
+                const username_from_data = data.username || user.username;
+                const userId = data.id || user.id;
+
+                // Validate that we received a token and role
+                if (!token || !role) {
+                    console.error("Invalid response structure - missing token or role:", data);
+                    throw new Error("Server javobida xatolik: token yoki rol mavjud emas");
+                }
+
+                // Save token and user info - standardized to access_token
+                localStorage.setItem("access_token", token);
+                // Ensure role is lowercase to match file names (cashier.html, accountant.html)
+                const normalizedRole = role.toLowerCase().trim();
+                localStorage.setItem("role", normalizedRole);
+
+                if (username_from_data) localStorage.setItem("username", username_from_data);
+                if (userId) localStorage.setItem("userId", userId);
+
+                console.log("[LOGIN SUCCESS]", {
+                    role: normalizedRole,
+                    token_preview: token.substring(0, 10) + "...",
+                    userId: userId
+                });
+
+                // Determine redirect URL based on role
+                let redirectUrl = "index.html";
+                if (normalizedRole === 'owner') {
+                    redirectUrl = "owner.html";
+                } else if (normalizedRole === 'cashier') {
+                    redirectUrl = "cashier.html";
+                } else if (normalizedRole === 'accountant') {
+                    redirectUrl = "accountant.html";
+                }
+
+                // Small delay to ensure localStorage is fully written before navigation
+                // This fixes the race condition where the target page checks auth before data is saved
+                setTimeout(() => {
+                    window.location.replace(redirectUrl);
+                }, 100);
+
+            } catch (error) {
+                // Translate error to Uzbek
+                const errorTranslations = {
+                    'Login va parol kiritilishi shart!': "Login va parol kiritilishi shart!",
+                    'Bunday foydalanuvchi mavjud emas!': "Bunday foydalanuvchi mavjud emas!",
+                    'Login yoki parol xato!': "Login yoki parol xato!",
+                    'Incorrect username or password': "Login yoki parol xato!",
+                    'Failed to fetch': 'Server bilan bog\'lanishda xatolik',
+                    'NetworkError': 'Internet aloqasi yo\'q',
+                    'Network request failed': 'Server bilan bog\'lanishda xatolik',
+                    'Unexpected token': 'Serverdan noto\'g\'ri javob (JSON emas)',
+                    'is not valid JSON': 'Serverdan noto\'g\'ri javob (JSON emas)'
+                };
+
+                let errorMessage = error.message;
+                // Check against translations
+                for (const [key, value] of Object.entries(errorTranslations)) {
+                    if (errorMessage.includes(key)) {
+                        errorMessage = value;
+                        break;
+                    }
+                }
+
+                errorBox.textContent = errorMessage;
+                errorBox.classList.add("show");
+                console.error("[LOGIN ERROR]", error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Kirish";
+            }
+        }
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

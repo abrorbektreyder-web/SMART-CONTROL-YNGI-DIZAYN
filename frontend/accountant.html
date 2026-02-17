@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Smart Control - Buhgalteriya</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ===== RESPONSIVE CSS ===== -->
+    <style>
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Summary cards */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Report filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 10px 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                width: 260px;
+                background: var(--sidebar-bg);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 15px !important;
+                width: 100% !important;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .stats-grid,
+            .summary-row {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            h1#page-title {
+                font-size: 1.1rem;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .summary-row {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+
+    <script>
+        // STRICT AUTH CHECK — faqat accountant kirishi mumkin
+        (function () {
+            const token = localStorage.getItem("access_token");
+            const role = localStorage.getItem("role");
+            if (!token) { window.location.replace("login.html"); return; }
+            if (role !== "accountant") { localStorage.clear(); window.location.replace("login.html"); }
+        })();
+    </script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h2>Smart Control</h2>
+            <span>Buhgalteriya</span>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="active" onclick="loadDashboard(); closeSidebar();">
+                <div class="icon">📊</div> Dashboard
+            </a>
+            <a href="#" onclick="loadDebts(); closeSidebar();">
+                <div class="icon">📒</div> Qarzlar
+            </a>
+            <a href="#" onclick="loadProducts(); closeSidebar();">
+                <div class="icon">📦</div> Mahsulotlar
+            </a>
+            <a href="#" onclick="loadReports(); closeSidebar();">
+                <div class="icon">📈</div> Hisobotlar
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">BX</div>
+            <div class="info">
+                <h4 id="user-name">Buhgalter</h4>
+                <p id="user-role">Accountant</p>
+            </div>
+        </div>
+
+        <button onclick="logout()"
+            style="margin-top: 15px; width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 500; transition: all 0.3s;">
+            🚪 Chiqish
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="top-bar" style="display: flex; align-items: center; gap: 10px;">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 id="page-title">Moliyaviy Dashboard</h1>
+            <div class="status-indicator" style="margin-left: auto;">
+                <span class="dot online"></span> Tizim Faol
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view-container">
+
+            <!-- STAT CARDS -->
+            <div class="summary-row">
+                <div class="card stat-card glass">
+                    <div class="stat-icon sales">💰</div>
+                    <div class="stat-info">
+                        <h3>Bugungi Savdo</h3>
+                        <h2 id="total-sales">0.00 UZS</h2>
+                        <span class="sub-text">Jami tushum</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon cash">💵</div>
+                    <div class="stat-info">
+                        <h3>Naqd Pul</h3>
+                        <h2 id="cash-flow">0.00 UZS</h2>
+                        <span class="sub-text">Kassada</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon debt">📒</div>
+                    <div class="stat-info">
+                        <h3>Faol Qarzlar</h3>
+                        <h2 id="active-debts">0.00 UZS</h2>
+                        <span class="sub-text">Jami nasiya</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass hero">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <h3>Sof Foyda</h3>
+                        <h2 id="net-profit">0.00 UZS</h2>
+                        <span class="sub-text">Taxminiy</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART -->
+            <div class="content-grid">
+                <div class="card chart-container glass">
+                    <div class="card-header">
+                        <h3>Savdo Grafigi</h3>
+                        <select class="chart-filter">
+                            <option>Oxirgi 7 kun</option>
+                            <option>Oxirgi 30 kun</option>
+                        </select>
+                    </div>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <!-- RECENT DEBTS -->
+                <div class="card table-container glass">
+                    <div class="card-header">
+                        <h3>📒 Oxirgi Qarzlar</h3>
+                        <button class="btn-text" onclick="loadDebts()">Barchasini ko'rish</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mijoz</th>
+                                    <th>Summa</th>
+                                    <th>Qoldiq</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-debts-body">
+                                <tr>
+                                    <td colspan="4"
+                                        style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                        Yuklanmoqda...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./assets/app.js"></script>
+
+    <!-- BUHGALTER SPECIFIC FUNCTIONS -->
+    <script>
+        // ========================================
+        // MOBIL MENYU TOGGLE
+        // ========================================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        // ========================================
+        // OXIRGI QARZLAR (Dashboard uchun)
+        // ========================================
+        async function loadRecentDebts() {
+            try {
+                const response = await fetch(`${API_URL}/debts`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) return;
+
+                const debts = await response.json();
+                const tbody = document.getElementById('recent-debts-body');
+
+                if (!debts || debts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary);">Qarz mavjud emas</td></tr>';
+                    return;
+                }
+
+                // Oxirgi 5 ta qarz
+                const recent = debts.slice(0, 5);
+                tbody.innerHTML = recent.map(d => `
+                    <tr>
+                        <td>${d.customer_name || '—'}</td>
+                        <td>${Number(d.original_amount).toLocaleString()} UZS</td>
+                        <td style="color: ${d.remaining_amount > 0 ? '#ef4444' : '#10b981'};">
+                            ${Number(d.remaining_amount).toLocaleString()} UZS
+                        </td>
+                        <td>
+                            <span class="badge ${d.status === 'OPEN' ? 'debt' : 'completed'}">
+                                ${d.status === 'OPEN' ? '⏳ Ochiq' : '✅ Yopilgan'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Recent debts error:', error);
+            }
+        }
+
+        // Sahifa yuklanganda
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecentDebts();
+
+            // User info'ni yangilash
+            const name = localStorage.getItem('username') || 'Buhgalter';
+            const avatarEl = document.getElementById('user-avatar');
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.textContent = name;
+            if (avatarEl) avatarEl.textContent = name.substring(0, 2).toUpperCase();
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

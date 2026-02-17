@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Smart Control - Owner Dashboard</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ===== RESPONSIVE + MODAL CSS ===== -->
+    <style>
+        /* --- HAMBURGER MENYU TUGMASI --- */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- SIDEBAR OVERLAY (Telefonlarda) --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* --- JADVAL SCROLL --- */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- TELEFONLAR UCHUN (768px dan kichik) --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                width: 260px;
+                background: var(--bg-darker, #0f172a);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 15px !important;
+                width: 100% !important;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .modal-inner {
+                width: 92% !important;
+                padding: 20px !important;
+            }
+
+            h1#page-title {
+                font-size: 1.1rem;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        /* --- MODAL OYNALAR --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-inner {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 16px;
+            width: 400px;
+            max-width: 92%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-inner label {
+            display: block;
+            margin-bottom: 6px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .modal-inner input,
+        .modal-inner select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+
+        .modal-inner select {
+            cursor: pointer;
+        }
+
+        .modal-inner input:focus,
+        .modal-inner select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        /* --- TUGMALAR --- */
+        .btn-green {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-green:hover {
+            background: #059669;
+        }
+
+        .btn-blue {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-blue:hover {
+            background: #2563eb;
+        }
+
+        .btn-gray {
+            padding: 10px 20px;
+            background: #475569;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-save {
+            padding: 10px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-warn {
+            padding: 10px 24px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Action tugmalari */
+        .act-btn {
+            padding: 6px 10px;
+            border: 1px solid;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .act-btn:hover {
+            transform: scale(1.08);
+        }
+
+        .act-key {
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .act-block {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .act-unblock {
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .act-del {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+        }
+    </style>
+
+    <script>
+        // STRICT AUTH CHECK
+        (function () {
+            const token = localStorage.getItem("access_token");
+            const role = localStorage.getItem("role");
+
+            if (!token) {
+                window.location.replace("login.html");
+                return;
+            }
+            if (role !== "owner") {
+                localStorage.clear();
+                window.location.replace("login.html");
+            }
+        })();
+    </script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR OVERLAY (telefonlarda sidebar yopish uchun) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h2>Smart Control</h2>
+            <span>Owner Panel</span>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="active" onclick="loadDashboard(); closeSidebar();">
+                <div class="icon">📊</div> Boshqaruv paneli
+            </a>
+            <a href="#" id="menu-users" onclick="loadUsers(); closeSidebar();">
+                <div class="icon">👥</div> Xodimlar
+            </a>
+            <a href="#" onclick="loadShiftManagement(); closeSidebar();">
+                <div class="icon">⏰</div> Smena
+            </a>
+            <a href="#" onclick="loadProducts(); closeSidebar();">
+                <div class="icon">📦</div> Mahsulotlar
+            </a>
+            <a href="#" onclick="loadSales(); closeSidebar();">
+                <div class="icon">🛒</div> Yangi savdo
+            </a>
+            <a href="#" onclick="loadDebts(); closeSidebar();">
+                <div class="icon">📒</div> Qarzlar
+            </a>
+            <a href="#" onclick="loadReports(); closeSidebar();">
+                <div class="icon">📈</div> Hisobotlar
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">AD</div>
+            <div class="info">
+                <h4 id="user-name">Admin</h4>
+                <p id="user-role">Owner</p>
+            </div>
+        </div>
+
+        <!-- LOGOUT BUTTON -->
+        <button onclick="logout()"
+            style="margin-top: 15px; width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 500; transition: all 0.3s;">
+            🚪 Chiqish
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="top-bar" style="display: flex; align-items: center; gap: 10px;">
+            <!-- HAMBURGER TUGMA (faqat telefonda ko'rinadi) -->
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 id="page-title">Boshqaruv Paneli</h1>
+            <div class="status-indicator" style="margin-left: auto;">
+                <span class="dot online"></span> Tizim Faol
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view-container">
+            <!-- 5 INDICATOR CARDS -->
+            <div class="stats-grid">
+                <div class="card stat-card glass">
+                    <div class="stat-icon sales">💰</div>
+                    <div class="stat-info">
+                        <h3>Bugungi Savdo</h3>
+                        <h2 id="total-sales">0.00 UZS</h2>
+                        <span class="trend up">▲ +12% kechaga nisbatan</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon cash">💵</div>
+                    <div class="stat-info">
+                        <h3>Kassa</h3>
+                        <h2 id="cash-flow">0.00 UZS</h2>
+                        <span class="sub-text">Kassada</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon debt">📒</div>
+                    <div class="stat-info">
+                        <h3>Faol Qarzlar</h3>
+                        <h2 id="active-debts">0.00 UZS</h2>
+                        <span class="sub-text">Jami Qarz</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Kam Qolgan Mahsulotlar</h3>
+                        <h2 id="low-stock">0</h2>
+                        <span class="sub-text">To'ldirish kerak</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass" style="border-color: rgba(234, 179, 8, 0.3);">
+                    <div class="stat-icon" style="background: rgba(234, 179, 8, 0.2); color: #eab308;">🛒</div>
+                    <div class="stat-info">
+                        <h3>Sariq Savat</h3>
+                        <h2 id="sariq-savat" style="color: #eab308;">0</h2>
+                        <span class="sub-text">Bekor qilingan: <span id="sariq-savat-qty">0</span> dona</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART & RECENT TRANSACTIONS -->
+            <div class="content-grid">
+                <!-- MAIN CHART -->
+                <div class="card chart-container glass">
+                    <div class="card-header">
+                        <h3>Savdo Grafigi</h3>
+                        <select class="chart-filter">
+                            <option>Oxirgi 7 kun</option>
+                            <option>Oxirgi 30 kun</option>
+                        </select>
+                    </div>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <!-- RECENT TRANSACTIONS -->
+                <div class="card table-container glass">
+                    <div class="card-header">
+                        <h3>So'nggi Savdolar</h3>
+                        <button class="btn-text">Barchasini ko'rish</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Vaqt</th>
+                                <th>Summa</th>
+                                <th>To'lov</th>
+                                <th>Holat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== USERS SECTION ===== -->
+        <section id="section-users" class="view-section" style="display: none;">
+            <div class="card glass" style="padding: 20px;">
+                <div class="card-header"
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    <h3>👥 Xodimlar Ro'yxati</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="openAddUserModal()" class="btn-green">➕ Yangi Xodim</button>
+                        <button onclick="loadUsers()" class="btn-blue">🔄 Yangilash</button>
+                    </div>
+                </div>
+
+                <div id="users-loading" style="text-align: center; padding: 40px;">
+                    <p>⏳ Yuklanmoqda...</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table" id="users-table" style="display: none; width: 100%; min-width: 700px;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>To'liq Ism</th>
+                                <th>Login</th>
+                                <th>Rol</th>
+                                <th>Status</th>
+                                <th>Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== MODAL: YANGI XODIM QO'SHISH ===== -->
+    <div id="modal-add-user" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-inner">
+            <h3 style="margin-bottom: 20px; font-size: 1.2rem;">➕ Yangi Xodim Qo'shish</h3>
+
+            <label>To'liq Ism-Familiya *</label>
+            <input type="text" id="new-fullname" placeholder="Masalan: Aliyev Jasur">
+
+            <label>Login (username) *</label>
+            <input type="text" id="new-username" placeholder="Masalan: kassir1">
+
+            <label>Parol *</label>
+            <input type="password" id="new-password" placeholder="Kamida 4 ta belgi">
+
+            <label>Lavozimi</label>
+            <select id="new-role">
+                <option value="cashier">🛒 Kassir</option>
+                <option value="admin">🔧 Admin</option>
+                <option value="accountant">📊 Buxgalter</option>
+            </select>
+
+            <div class="modal-actions">
+                <button onclick="document.getElementById('modal-add-user').style.display='none'"
+                    class="btn-gray">Bekor</button>
+                <button onclick="saveNewUser()" class="btn-save">💾 Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: PAROL O'ZGARTIRISH ===== -->
+    <div id="modal-password" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-inner" style="width: 380px;">
+            <h3 style="margin-bottom: 20px; font-size: 1.2rem;">🔑 Parolni Yangilash</h3>
+
+            <input type="hidden" id="edit-user-id">
+
+            <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.9rem;">
+                Xodim: <strong id="edit-user-name" style="color: white;">—</strong>
+            </p>
+
+            <label>Yangi Parol *</label>
+            <input type="password" id="edit-new-password" placeholder="Yangi parolni kiriting">
+
+            <div class="modal-actions">
+                <button onclick="document.getElementById('modal-password').style.display='none'"
+                    class="btn-gray">Bekor</button>
+                <button onclick="savePasswordChange()" class="btn-warn">🔑 O'zgartirish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== APP.JS (ASOSIY LOGIKA) ===== -->
+    <script src="./assets/app.js"></script>
+
+    <!-- ===== OWNER-SPECIFIC FUNCTIONS ===== -->
+    <script>
+        // ========================================
+        // MOBIL MENYU TOGGLE
+        // ========================================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        // ========================================
+        // MODAL OPENERS
+        // ========================================
+        function openAddUserModal() {
+            document.getElementById('new-fullname').value = '';
+            document.getElementById('new-username').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('new-role').value = 'cashier';
+            document.getElementById('modal-add-user').style.display = 'flex';
+        }
+
+        function openPasswordModal(userId, userName) {
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-user-name').innerText = userName;
+            document.getElementById('edit-new-password').value = '';
+            document.getElementById('modal-password').style.display = 'flex';
+        }
+
+        // ========================================
+        // SAVE NEW USER: POST /auth/register
+        // ========================================
+        async function saveNewUser() {
+            const full_name = document.getElementById('new-fullname').value.trim();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value;
+            const role = document.getElementById('new-role').value;
+
+            if (!full_name || !username || !password) {
+                showToast("Barcha maydonlarni to'ldiring!", 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ full_name, username, password, role })
+                });
+
+                if (response.ok) {
+                    document.getElementById('modal-add-user').style.display = 'none';
+                    showToast("✅ Yangi xodim qo'shildi!", 'success');
+                    loadUsers();
+                } else {
+                    const err = await response.json();
+                    showToast(`❌ ${err.detail || 'Xatolik yuz berdi'}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Server xatosi: ${error.message}`, 'error');
+            }
+        }
+
+        // ========================================
+        // RESET PASSWORD: PUT /auth/users/{id}/reset-password
+        // ========================================
+        async function savePasswordChange() {
+            const userId = document.getElementById('edit-user-id').value;
+            const newPassword = document.getElementById('edit-new-password').value;
+
+            if (!newPassword || newPassword.length < 4) {
+                showToast("Parol kamida 4 ta belgidan iborat bo'lsin!", 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/users/${userId}/reset-password`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ new_password: newPassword })
+                });
+
+                if (response.ok) {
+                    document.getElementById('modal-password').style.display = 'none';
+                    showToast("✅ Parol muvaffaqiyatli o'zgartirildi!", 'success');
+                } else {
+                    const err = await response.json();
+                    showToast(`❌ ${err.detail || 'Xatolik yuz berdi'}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Server xatosi: ${error.message}`, 'error');
+            }
+        }
+
+        // ========================================
+        // DELETE USER: DELETE /auth/users/{id}
+        // ========================================
+        async function deleteUser(userId) {
+            if (!confirm("⚠️ Bu xodim tizimdan butunlay o'chiriladi. Davom etasizmi?")) return;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    showToast("✅ Xodim o'chirildi!", 'success');
+                    loadUsers();
+                } else {
+                    const err = await response.json();
+                    showToast(`❌ ${err.detail || 'Xatolik yuz berdi'}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Server xatosi: ${error.message}`, 'error');
+            }
+        }
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

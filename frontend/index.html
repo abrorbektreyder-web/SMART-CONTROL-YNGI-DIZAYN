@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Smart Control POS - Boshqaruv Paneli</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // GLOBAL AUTH GUARD (INDEX = OWNER)
+        (function () {
+            const token = localStorage.getItem("access_token");
+            const role = localStorage.getItem("role");
+
+            if (!token) {
+                window.location.replace("login.html");
+                return;
+            }
+
+            // Index is meant for Owner. Strict check.
+            if (role !== 'owner') {
+                localStorage.clear();
+                window.location.replace("login.html");
+            }
+        })();
+    </script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2>Smart Control</h2>
+            <span>Enterprise V4.0</span>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="active" onclick="loadDashboard()">
+                <div class="icon">📊</div> Boshqaruv paneli
+            </a>
+            <a href="#" id="menu-users" style="display: none;">
+                <div class="icon">👥</div> Xodimlar
+            </a>
+            <a href="#" onclick="loadProducts()">
+                <div class="icon">📦</div> Mahsulotlar
+            </a>
+            <a href="#" onclick="loadSales()">
+                <div class="icon">🛒</div> Yangi savdo
+            </a>
+            <a href="#" onclick="loadDebts()">
+                <div class="icon">📒</div> Qarzlar
+            </a>
+            <a href="#" onclick="loadReports()">
+                <div class="icon">📈</div> Hisobotlar
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">AD</div>
+            <div class="info">
+                <h4 id="user-name">Admin</h4>
+                <p id="user-role">Owner</p>
+            </div>
+        </div>
+
+        <!-- LOGOUT BUTTON -->
+        <button onclick="logout()"
+            style="margin-top: 15px; width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 500; transition: all 0.3s;">
+            🚪 Chiqish
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h1 id="page-title">Boshqaruv Paneli</h1>
+            <div class="status-indicator">
+                <span class="dot online"></span> Tizim Faol
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view-container">
+            <!-- 4 INDICATOR CARDS -->
+            <div class="stats-grid">
+                <div class="card stat-card glass">
+                    <div class="stat-icon sales">💰</div>
+                    <div class="stat-info">
+                        <h3>Bugungi Savdo</h3>
+                        <h2 id="total-sales">0.00 UZS</h2>
+                        <span class="trend up">▲ +12% kechaga nisbatan</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon cash">💵</div>
+                    <div class="stat-info">
+                        <h3>Kassa</h3>
+                        <h2 id="cash-flow">0.00 UZS</h2>
+                        <span class="sub-text">Kassada</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon debt">📒</div>
+                    <div class="stat-info">
+                        <h3>Faol Qarzlar</h3>
+                        <h2 id="active-debts">0.00 UZS</h2>
+                        <span class="sub-text">Jami Qarz</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Kam Qolgan Mahsulotlar</h3>
+                        <h2 id="low-stock">0</h2>
+                        <span class="sub-text">To'ldirish kerak</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART & RECENT TRANSACTIONS -->
+            <div class="content-grid">
+                <!-- MAIN CHART -->
+                <div class="card chart-container glass">
+                    <div class="card-header">
+
+                        <h3>Savdo Grafigi</h3>
+                        <select class="chart-filter">
+                            <option>Oxirgi 7 kun</option>
+                            <option>Oxirgi 30 kun</option>
+                        </select>
+                    </div>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <!-- RECENT TRANSACTIONS -->
+                <div class="card table-container glass">
+                    <div class="card-header">
+                        <h3>So'nggi Savdolar</h3>
+                        <button class="btn-text">Barchasini ko'rish</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Vaqt</th>
+                                <th>Summa</th>
+                                <th>To'lov</th>
+                                <th>Holat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS SECTION (Hidden by default) -->
+        <section id="section-users" class="view-section" style="display: none;">
+            <div class="card glass" style="padding: 20px;">
+                <div class="card-header"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>👥 Xodimlar Ro'yxati</h3>
+                    <button onclick="loadUsers()"
+                        style="background: var(--accent-blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">🔄
+                        Yangilash</button>
+                </div>
+
+                <div id="users-loading" style="text-align: center; padding: 40px;">
+                    <p>⏳ Yuklanmoqda...</p>
+                </div>
+
+                <table class="data-table" id="users-table" style="display: none; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ism (To'liq)</th>
+                            <th>Telefon/Login</th>
+                            <th>Rol</th>
+                            <th>Status</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="./assets/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

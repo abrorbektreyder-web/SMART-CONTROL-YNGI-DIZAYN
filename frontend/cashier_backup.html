@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Smart Control - Kassir</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ===== RESPONSIVE CSS ===== -->
+    <style>
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Smena status banner */
+        .shift-banner {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .shift-open {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .shift-closed {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        /* Quick action cards */
+        .action-card {
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .action-card .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .action-card h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .action-card p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                width: 260px;
+                background: var(--bg-darker, #0f172a);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 15px !important;
+                width: 100% !important;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            h1#page-title {
+                font-size: 1.1rem;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+    </style>
+
+    <script>
+        // STRICT AUTH CHECK — faqat cashier kirishi mumkin
+        (function () {
+            const token = localStorage.getItem("access_token");
+            const role = localStorage.getItem("role");
+            if (!token) { window.location.replace("login.html"); return; }
+            if (role !== "cashier") { localStorage.clear(); window.location.replace("login.html"); }
+        })();
+    </script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h2>Smart Control</h2>
+            <span>Kassir Paneli</span>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="active" onclick="loadDashboard(); closeSidebar();">
+                <div class="icon">🏠</div> Bosh Sahifa
+            </a>
+            <a href="#" onclick="loadShiftManagement(); closeSidebar();">
+                <div class="icon">⏰</div> Smena
+            </a>
+            <a href="#" onclick="loadProducts(); closeSidebar();">
+                <div class="icon">📦</div> Mahsulotlar
+            </a>
+            <a href="#" onclick="loadSales(); closeSidebar();">
+                <div class="icon">🛒</div> Yangi Savdo
+            </a>
+            <a href="#" onclick="loadDebts(); closeSidebar();">
+                <div class="icon">📒</div> Qarzlar
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">KS</div>
+            <div class="info">
+                <h4 id="user-name">Kassir</h4>
+                <p id="user-role">Cashier</p>
+            </div>
+        </div>
+
+        <button onclick="logout()"
+            style="margin-top: 15px; width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 500; transition: all 0.3s;">
+            🚪 Chiqish
+        </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="top-bar" style="display: flex; align-items: center; gap: 10px;">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 id="page-title">Bosh Sahifa</h1>
+            <div class="status-indicator" style="margin-left: auto;">
+                <span class="dot online"></span> Kassa Faol
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view-container">
+
+            <!-- SMENA STATUS BANNER -->
+            <div id="shift-status-banner" class="shift-banner shift-closed">
+                <div>
+                    <strong id="shift-status-text">⏳ Smena holati tekshirilmoqda...</strong>
+                    <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.8;" id="shift-status-detail"></p>
+                </div>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card stat-card glass">
+                    <div class="stat-icon sales">💰</div>
+                    <div class="stat-info">
+                        <h3>Bugungi Savdo</h3>
+                        <h2 id="total-sales">0.00 UZS</h2>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">📦</div>
+                    <div class="stat-info">
+                        <h3>Mahsulotlar</h3>
+                        <h2 id="product-count">0</h2>
+                    </div>
+                </div>
+
+                <div class="card stat-card glass">
+                    <div class="stat-icon stock">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Kam Qolgan</h3>
+                        <h2 id="low-stock">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <h3 style="margin: 24px 0 14px; color: var(--text-secondary); font-size: 0.9rem;">⚡ Tezkor Amallar</h3>
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card glass action-card" onclick="loadSales()">
+                    <div class="action-icon">🛒</div>
+                    <h3>Yangi Savdo</h3>
+                    <p>Kassaga o'tish</p>
+                </div>
+
+                <div class="card glass action-card" onclick="loadShiftManagement()">
+                    <div class="action-icon">⏰</div>
+                    <h3>Smena</h3>
+                    <p>Ochish / Yopish</p>
+                </div>
+
+                <div class="card glass action-card" onclick="loadDebts()">
+                    <div class="action-icon">📒</div>
+                    <h3>Qarzlar</h3>
+                    <p>To'lov qabul qilish</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./assets/app.js"></script>
+
+    <!-- KASSIR SPECIFIC FUNCTIONS -->
+    <script>
+        // ========================================
+        // MOBIL MENYU TOGGLE
+        // ========================================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        // ========================================
+        // SMENA STATUS CHECK (Dashboard yuklanganda)
+        // ========================================
+        async function checkDashboardShiftBanner() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`${API_URL}/shifts/status/${userId}`, {
+                    headers: getAuthHeaders()
+                });
+
+                const banner = document.getElementById('shift-status-banner');
+                const text = document.getElementById('shift-status-text');
+                const detail = document.getElementById('shift-status-detail');
+
+                // Agar elementlar mavjud bo'lmasa, chiqib ketamiz
+                if (!banner || !text || !detail) return;
+
+                if (response.ok) {
+                    const shift = await response.json();
+                    banner.className = 'shift-banner shift-open';
+                    text.innerHTML = '🟢 <strong>Smena OCHIQ</strong>';
+                    detail.textContent = `Smena #${shift.id} | Boshlang'ich kassa: ${Number(shift.start_cash).toLocaleString()} UZS`;
+                } else {
+                    banner.className = 'shift-banner shift-closed';
+                    text.innerHTML = '🔴 <strong>Smena YOPIQ</strong>';
+                    detail.textContent = 'Savdo qilish uchun avval smena oching';
+                }
+            } catch (error) {
+                console.error('Dashboard shift banner error:', error);
+            }
+        }
+
+        // Sahifa yuklanganda smena holatini tekshir
+        document.addEventListener('DOMContentLoaded', () => {
+            checkDashboardShiftBanner();
+
+            // User info'ni yangilash
+            const name = localStorage.getItem('username') || 'Kassir';
+            const avatarEl = document.getElementById('user-avatar');
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.textContent = name;
+            if (avatarEl) avatarEl.textContent = name.substring(0, 2).toUpperCase();
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

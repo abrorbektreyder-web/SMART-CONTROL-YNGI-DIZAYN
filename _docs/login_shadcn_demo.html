@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Smart Control - Shadcn Style Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(217.2 32.6% 17.5%)",
+                        input: "hsl(217.2 32.6% 17.5%)",
+                        ring: "hsl(212.7 26.8% 83.9%)",
+                        background: "hsl(222.2 84% 4.9%)",
+                        foreground: "hsl(210 40% 98%)",
+                        primary: {
+                            DEFAULT: "hsl(210 40% 98%)",
+                            foreground: "hsl(222.2 47.4% 11.2%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(217.2 32.6% 17.5%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(0 62.8% 30.6%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(217.2 32.6% 17.5%)",
+                            foreground: "hsl(215 20.2% 65.1%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(217.2 32.6% 17.5%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(222.2 84% 4.9%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(222.2 84% 4.9%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Shadcn Button Component */
+        .btn-shadcn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            outline: none;
+            height: 2.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: calc(0.5rem - 2px);
+        }
+
+        .btn-shadcn:focus-visible {
+            outline: 2px solid hsl(212.7 26.8% 83.9%);
+            outline-offset: 2px;
+        }
+
+        .btn-shadcn:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .btn-default {
+            background: hsl(210 40% 98%);
+            color: hsl(222.2 47.4% 11.2%);
+        }
+
+        .btn-default:hover {
+            background: hsl(210 40% 96%);
+        }
+
+        /* Shadcn Input Component */
+        .input-shadcn {
+            display: flex;
+            height: 2.5rem;
+            width: 100%;
+            border-radius: calc(0.5rem - 2px);
+            border: 1px solid hsl(217.2 32.6% 17.5%);
+            background: hsl(222.2 84% 4.9%);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            color: hsl(210 40% 98%);
+        }
+
+        .input-shadcn::placeholder {
+            color: hsl(215 20.2% 65.1%);
+        }
+
+        .input-shadcn:focus {
+            outline: none;
+            border-color: hsl(212.7 26.8% 83.9%);
+            box-shadow: 0 0 0 2px hsl(217.2 32.6% 17.5%);
+        }
+
+        .input-shadcn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Shadcn Card Component */
+        .card-shadcn {
+            border-radius: 0.5rem;
+            border: 1px solid hsl(217.2 32.6% 17.5%);
+            background: hsl(222.2 84% 4.9%);
+            color: hsl(210 40% 98%);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        /* Shadcn Label Component */
+        .label-shadcn {
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1;
+            color: hsl(210 40% 98%);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: hsl(222.2 47.4% 11.2%);
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Alert Component (Shadcn destructive variant) */
+        .alert-destructive {
+            border: 1px solid hsl(0 62.8% 30.6%);
+            background: hsl(0 62.8% 30.6% / 0.1);
+            color: hsl(0 62.8% 90%);
+            border-radius: calc(0.5rem - 2px);
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-foreground min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Card -->
+        <div class="card-shadcn p-8 space-y-6">
+            <!-- Logo -->
+            <div class="flex flex-col space-y-2 text-center">
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    Smart Control
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Tizimga kirish uchun ma'lumotlaringizni kiriting
+                </p>
+            </div>
+
+            <!-- Error Alert (hidden by default) -->
+            <div id="error-box" class="alert-destructive hidden">
+                <div class="flex items-start gap-2">
+                    <svg class="h-4 w-4 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span id="error-text"></span>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+                <!-- Username Field -->
+                <div class="space-y-2">
+                    <label for="username" class="label-shadcn">
+                        Foydalanuvchi nomi
+                    </label>
+                    <input type="text" id="username" name="username" class="input-shadcn" placeholder="admin"
+                        autocomplete="username" required />
+                </div>
+
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <label for="password" class="label-shadcn">
+                        Parol
+                    </label>
+                    <input type="password" id="password" name="password" class="input-shadcn" placeholder="••••••••"
+                        autocomplete="current-password" required />
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-shadcn btn-default w-full" id="btn-submit">
+                    Kirish
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="text-center text-sm text-muted-foreground">
+                <p>Enterprise POS v4.0</p>
+            </div>
+        </div>
+
+        <!-- Comparison Note -->
+        <div class="mt-8 p-4 border border-border rounded-md bg-secondary/20">
+            <h3 class="text-sm font-semibold mb-2">🎨 Shadcn Style Features:</h3>
+            <ul class="text-xs text-muted-foreground space-y-1">
+                <li>✓ Minimalist black/white color scheme</li>
+                <li>✓ Clean borders (1px solid)</li>
+                <li>✓ Consistent border-radius (0.5rem)</li>
+                <li>✓ Subtle shadows</li>
+                <li>✓ Focus rings on inputs</li>
+                <li>✓ Inter font (same as Shadcn)</li>
+                <li>✓ Proper spacing (Tailwind scale)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://smart-control-v5-stable.onrender.com";
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const errorBox = document.getElementById("error-box");
+            const errorText = document.getElementById("error-text");
+            const submitBtn = document.getElementById("btn-submit");
+
+            // Reset error
+            errorBox.classList.add("hidden");
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner mr-2"></span> Kirish...';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorMessage = "Login xatosi";
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorData.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = `Xatolik: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                console.log("Server Response:", data);
+
+                const token = data.access_token || data.token;
+                const user = data.user || {};
+                const role = data.role || user.role;
+                const username_from_data = data.username || user.username;
+                const userId = data.id || user.id;
+
+                if (!token || !role) {
+                    throw new Error("Server javobida xatolik: token yoki rol mavjud emas");
+                }
+
+                localStorage.setItem("access_token", token);
+                const normalizedRole = role.toLowerCase().trim();
+                localStorage.setItem("role", normalizedRole);
+
+                if (username_from_data) localStorage.setItem("username", username_from_data);
+                if (userId) localStorage.setItem("userId", userId);
+
+                // Determine redirect URL
+                let redirectUrl = "index.html";
+                if (normalizedRole === 'owner') {
+                    redirectUrl = "owner.html";
+                } else if (normalizedRole === 'cashier') {
+                    redirectUrl = "cashier.html";
+                } else if (normalizedRole === 'accountant') {
+                    redirectUrl = "accountant.html";
+                }
+
+                setTimeout(() => {
+                    window.location.replace(redirectUrl);
+                }, 100);
+
+            } catch (error) {
+                const errorTranslations = {
+                    'Incorrect username or password': "Login yoki parol xato!",
+                    'Failed to fetch': 'Server bilan bog\'lanishda xatolik',
+                    'NetworkError': 'Internet aloqasi yo\'q',
+                };
+
+                let errorMessage = error.message;
+                for (const [key, value] of Object.entries(errorTranslations)) {
+                    if (errorMessage.includes(key)) {
+                        errorMessage = value;
+                        break;
+                    }
+                }
+
+                errorText.textContent = errorMessage;
+                errorBox.classList.remove("hidden");
+                console.error("[LOGIN ERROR]", error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Kirish";
+            }
+        }
+    </script>
+</body>
+
+</html>
