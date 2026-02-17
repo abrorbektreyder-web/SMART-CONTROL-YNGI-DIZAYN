@@ -2304,10 +2304,13 @@ function loadAnalytics() {
     mainContent.innerHTML = `
         <div class="card glass" style="padding: 25px; margin-bottom: 20px;">
             <h3 style="color: var(--text-primary); margin-bottom: 15px;">📊 Savdo Tahlili</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="loadSalesPeriod('daily')" id="btn-period-daily" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--accent-blue, #3b82f6); background: rgba(59,130,246,0.15); color: var(--accent-blue, #3b82f6); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">📅 Kunlik</button>
-                <button onclick="loadSalesPeriod('weekly')" id="btn-period-weekly" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">📆 Haftalik</button>
-                <button onclick="loadSalesPeriod('monthly')" id="btn-period-monthly" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">🗓️ Oylik</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loadSalesPeriod('daily')" id="btn-period-daily" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--accent-blue, #3b82f6); background: rgba(59,130,246,0.15); color: var(--accent-blue, #3b82f6); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">📅 Kunlik</button>
+                    <button onclick="loadSalesPeriod('weekly')" id="btn-period-weekly" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">📆 Haftalik</button>
+                    <button onclick="loadSalesPeriod('monthly')" id="btn-period-monthly" style="padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">🗓️ Oylik</button>
+                </div>
+                <div id="analytics-date-display" style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary); text-align: right; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--glass-border);"></div>
             </div>
             <div id="analytics-sales-content" style="margin-top: 20px;">
                 <p style="text-align: center; padding: 30px; color: var(--text-secondary);">⬆️ Davrni tanlang</p>
@@ -2335,6 +2338,7 @@ function loadAnalytics() {
 
 async function loadSalesPeriod(period) {
     const content = document.getElementById('analytics-sales-content');
+    const dateDisplay = document.getElementById('analytics-date-display');
     if (!content) return;
 
     // Update button styles
@@ -2364,6 +2368,17 @@ async function loadSalesPeriod(period) {
 
         const data = await response.json();
 
+        if (dateDisplay) {
+            const startDate = new Date(data.start_date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+            const endDate = new Date(data.end_date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (period === 'daily') {
+                dateDisplay.innerHTML = `📅 ${startDate}`;
+            } else {
+                dateDisplay.innerHTML = `🗓️ ${startDate} — ${endDate}`;
+            }
+        }
+
         if (data.items.length === 0) {
             content.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
@@ -2380,10 +2395,6 @@ async function loadSalesPeriod(period) {
             const dayName = d.toLocaleDateString('uz-UZ', { weekday: 'short' });
             return `
                 <tr>
-                    <td style="padding: 12px 10px; border-bottom: 1px solid var(--glass-border);">
-                        <div style="font-weight: 600;">${dateStr}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${dayName}</div>
-                    </td>
                     <td style="padding: 12px 10px; border-bottom: 1px solid var(--glass-border); font-weight: 600; color: var(--accent-green, #22c55e);">${parseFloat(item.total_sales).toLocaleString()} UZS</td>
                     <td style="padding: 12px 10px; border-bottom: 1px solid var(--glass-border);">${parseFloat(item.total_cash).toLocaleString()} UZS</td>
                     <td style="padding: 12px 10px; border-bottom: 1px solid var(--glass-border);">${parseFloat(item.total_card).toLocaleString()} UZS</td>
@@ -2397,7 +2408,6 @@ async function loadSalesPeriod(period) {
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--glass-border);">
-                            <th style="padding: 12px 10px; text-align: left; color: var(--text-secondary); font-weight: 500;">Sana</th>
                             <th style="padding: 12px 10px; text-align: left; color: var(--text-secondary); font-weight: 500;">Jami</th>
                             <th style="padding: 12px 10px; text-align: left; color: var(--text-secondary); font-weight: 500;">Naqd</th>
                             <th style="padding: 12px 10px; text-align: left; color: var(--text-secondary); font-weight: 500;">Karta</th>
