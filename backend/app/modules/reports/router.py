@@ -104,6 +104,8 @@ def get_daily_sales(target_date: date = datetime.now().date(), db: Session = Dep
 @router.get("/sales-by-period", response_model=SalesPeriodResponse)
 def get_sales_by_period(
     period: str = Query("daily", description="daily, weekly, or monthly"),
+    start_date: date = None,
+    end_date: date = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -111,24 +113,34 @@ def get_sales_by_period(
     - daily: today only
     - weekly: last 7 days
     - monthly: last 30 days
+    - custom: use start_date and end_date params
     """
     today = datetime.now().date()
     
-    if period == "daily":
-        start_date = today
+    if start_date and end_date:
+        # Custom date range provided
+        calc_start = start_date
+        calc_end = end_date
+    elif period == "daily":
+        if datetime.now().hour < 5:
+            calc_start = today - timedelta(days=1)
+        else:
+            calc_start = today
+        calc_end = today
     elif period == "weekly":
-        start_date = today - timedelta(days=6)
+        calc_start = today - timedelta(days=6)
+        calc_end = today
     elif period == "monthly":
-        start_date = today - timedelta(days=29)
+        calc_start = today - timedelta(days=29)
+        calc_end = today
     else:
-        start_date = today
+        calc_start = today
+        calc_end = today
     
-    end_date = today
+    start_dt = datetime.combine(calc_start, datetime.min.time())
+    end_dt = datetime.combine(calc_end, datetime.max.time())
     
-    start_dt = datetime.combine(start_date, datetime.min.time())
-    end_dt = datetime.combine(end_date, datetime.max.time())
-    
-    # Query sales grouped by date
+    # Query sales grouped by date with DEBT included
     results = db.query(
         func.date(Sale.created_at).label("sale_date"),
         func.sum(Sale.total_amount).label("total"),
@@ -144,6 +156,12 @@ def get_sales_by_period(
                 else_=0
             )
         ).label("card"),
+        func.sum(
+            case(
+                (Sale.payment_method == PaymentMethod.DEBT, Sale.total_amount),
+                else_=0
+            )
+        ).label("debt"),
         func.count(Sale.id).label("count")
     ).filter(
         Sale.created_at >= start_dt,
@@ -158,12 +176,14 @@ def get_sales_by_period(
     grand_total = 0
     grand_cash = 0
     grand_card = 0
+    grand_debt = 0
     total_transactions = 0
     
     for row in results:
         total = float(row.total or 0)
         cash = float(row.cash or 0)
         card = float(row.card or 0)
+        debt = float(row.debt or 0)
         count = int(row.count or 0)
         
         items.append(SalesByDateItem(
@@ -171,22 +191,25 @@ def get_sales_by_period(
             total_sales=total,
             total_cash=cash,
             total_card=card,
+            total_debt=debt,
             transaction_count=count
         ))
         
         grand_total += total
         grand_cash += cash
         grand_card += card
+        grand_debt += debt
         total_transactions += count
     
     return SalesPeriodResponse(
         period=period,
-        start_date=start_date,
-        end_date=end_date,
+        start_date=calc_start,
+        end_date=calc_end,
         items=items,
         grand_total=grand_total,
         grand_cash=grand_cash,
         grand_card=grand_card,
+        grand_debt=grand_debt,
         total_transactions=total_transactions
     )
 

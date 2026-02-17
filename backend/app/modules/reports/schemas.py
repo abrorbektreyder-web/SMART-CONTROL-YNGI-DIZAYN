@@ -23,6 +23,7 @@ class SalesByDateItem(BaseModel):
     total_sales: float
     total_cash: float
     total_card: float
+    total_debt: float = 0
     transaction_count: int
 
 class SalesPeriodResponse(BaseModel):
@@ -33,6 +34,7 @@ class SalesPeriodResponse(BaseModel):
     grand_total: float
     grand_cash: float
     grand_card: float
+    grand_debt: float = 0
     total_transactions: int
 
 class ProductSalesItem(BaseModel):

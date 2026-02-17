@@ -20,6 +20,7 @@ from app.modules.sales.router import router as sales_router
 from app.modules.debts.router import router as debts_router
 from app.modules.expenses.router import router as expenses_router
 from app.modules.reports.router import router as reports_router
+# from app.core.scheduler import start_scheduler
 
 
 @asynccontextmanager
@@ -31,6 +32,11 @@ async def lifespan(app: FastAPI):
     print("🔄 Creating database tables...")
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created/verified successfully!")
+    
+    # Start Scheduler
+    # start_scheduler()
+    # print("⏰ Bg Scheduler started!")
+    
     yield
     # Shutdown: cleanup if needed
     print("👋 Application shutting down...")

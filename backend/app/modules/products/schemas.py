@@ -9,6 +9,7 @@ class ProductBase(BaseModel):
     cost_price: float = 0
     stock_quantity: int = 0
     category: Optional[str] = None
+    product_type: str = "long_term"  # 'dairy' or 'long_term'
 
 class ProductCreate(ProductBase):
     pass
@@ -19,6 +20,7 @@ class ProductUpdate(BaseModel):
     cost_price: Optional[float] = None
     stock_quantity: Optional[int] = None
     category: Optional[str] = None
+    product_type: Optional[str] = None
 
 class ProductResponse(ProductBase):
     id: int
@@ -30,3 +32,14 @@ class ProductResponse(ProductBase):
 
     class Config:
         from_attributes = True
+
+# Schema for Expiring Products List
+class ExpiringProductResponse(BaseModel):
+    id: int
+    name: str
+    barcode: str
+    batch_id: int
+    expiry_date: datetime
+    remaining_days: int
+    status: str  # RED, YELLOW
+    quantity: int
