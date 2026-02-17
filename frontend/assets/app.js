@@ -2296,7 +2296,40 @@ async function fetchDashboardData() {
 // ========================================
 // ANALYTICS PAGE (Full View)
 // ========================================
+let analyticsClockInterval = null;
+
+function formatUzDate(date, includeTime = false) {
+    const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+    if (!(date instanceof Date)) date = new Date(date);
+
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    if (includeTime) {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${day}-${month}, ${year} <span style="margin-left: 10px; color: var(--accent-blue); font-family: monospace;">${hours}:${minutes}:${seconds}</span>`;
+    }
+    return `${day}-${month}, ${year}`;
+}
+
+function updateAnalyticsClock() {
+    const dateDisplay = document.getElementById('analytics-date-display');
+    if (!dateDisplay) {
+        if (analyticsClockInterval) clearInterval(analyticsClockInterval);
+        return;
+    }
+
+    if (window.currentAnalyticsPeriod === 'daily') {
+        dateDisplay.innerHTML = `📅 ${formatUzDate(new Date(), true)}`;
+    }
+}
+
 function loadAnalytics() {
+    // Clear any existing clock interval
+    if (analyticsClockInterval) clearInterval(analyticsClockInterval);
     setActiveMenu('loadAnalytics');
     document.getElementById('page-title').innerText = "Analitika";
 
@@ -2331,9 +2364,17 @@ function loadAnalytics() {
         </div>
     `;
 
+    // Clear any existing clock interval
+    if (analyticsClockInterval) clearInterval(analyticsClockInterval);
+
     // Auto-load daily sales and product ranking
+    window.currentAnalyticsPeriod = 'daily';
     loadSalesPeriod('daily');
     loadProductRanking();
+
+    // Start clock
+    analyticsClockInterval = setInterval(updateAnalyticsClock, 1000);
+    updateAnalyticsClock();
 }
 
 async function loadSalesPeriod(period) {
@@ -2369,13 +2410,15 @@ async function loadSalesPeriod(period) {
         const data = await response.json();
 
         if (dateDisplay) {
-            const startDate = new Date(data.start_date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
-            const endDate = new Date(data.end_date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+            window.currentAnalyticsPeriod = period;
 
             if (period === 'daily') {
-                dateDisplay.innerHTML = `📅 ${startDate}`;
+                // For daily, the clock handles it
+                updateAnalyticsClock();
             } else {
-                dateDisplay.innerHTML = `🗓️ ${startDate} — ${endDate}`;
+                const startDateStr = formatUzDate(data.start_date);
+                const endDateStr = formatUzDate(data.end_date);
+                dateDisplay.innerHTML = `🗓️ ${startDateStr} — ${endDateStr}`;
             }
         }
 

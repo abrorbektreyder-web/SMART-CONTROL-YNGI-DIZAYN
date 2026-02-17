@@ -1,0 +1,2 @@
+- **Til:** Har doim o'zbek tilida gapirish.
+- **GitHub:** `commit`, `push` yoki `merge` qilishdan oldin har doim foydalanuvchi buyruq berishini kutish. O'zboshimchalik bilan `main` branchga kod qo'shmaslik.
